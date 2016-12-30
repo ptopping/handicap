@@ -25,14 +25,14 @@ def stats_df(url):
 	return df
 
 #Create new dataframe from subcolumn in dataframe
-def df_decompile(df_in,col):
-	'''
-	Input = DataFrame, Column name
-	Output = Truncated dataframe of column
-	'''
-	lst = list(df_in['col'])
-	df_out = pd.DataFrame(lst)
-	return df_out
+#def df_decompile(df_in,col):
+#	'''
+#	Input = DataFrame, Column name
+#	Output = Truncated dataframe of column
+#	'''
+#	lst = list(df_in['col'])
+#	df_out = pd.DataFrame(lst)
+#	return df_out
 
 #Load NHL Schedule API
 def schedule_df(url):
@@ -48,11 +48,13 @@ def schedule_df(url):
 	for k in dict_2:
 		list_2.append(dict_2.get(k))
 	df2 = pd.DataFrame(list_2)
-	df3 = df_decompile(df2, 'away')
-	df4 = df_decompile(df2, 'home')
-	df5 = pd.DataFrame({'gameDate' : df1['gameDate'], 'visitor' : df3['name'], 'home' : df4['name']})
-	df5['gameDate'] = df5['gameDate'].apply(zulu_con).astype('datetime64[ns, MST]')
-	return df5
+	df_away = pd.DataFrame(list(df2['away']))
+	df_home = pd.DataFrame(list(df2['home']))
+	df_away2 = pd.DataFrame(list(df_away['team']))
+	df_home2 = pd.DataFrame(list(df_home['team']))
+	df_fin = pd.DataFrame({'gameDate' : df1['gameDate'], 'visitor' : df_away2['name'], 'home' : df_home2['name']})
+	df_fin['gameDate'] = df_fin['gameDate'].apply(zulu_con).astype('datetime64[ns, MST]')
+	return df_fin
 
 #Convert DataFrame to csv for export
 def create_csv(frame):
