@@ -42,7 +42,7 @@ def schedule_df(url):
 	'''
 	list_2 = []
 	dict_1 = load_url(url).get('dates')[0]
-	list_1 = dict_1.get('games')[0:-1]
+	list_1 = dict_1.get('games')[::]
 	df1 = pd.DataFrame(list_1)
 	dict_2 = dict(df1['teams'])
 	for k in dict_2:

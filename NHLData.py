@@ -22,12 +22,39 @@ data_dict = {
 #Python libraries to import
 from urllib2 import urlopen
 import pandas as pd
+import numpy as np
 import json
 import dateutil.parser
 import datetime
 import HockeyLoad as hl
 
-NHL_csv = hl.create_csv(hl.dict_to_df(data_dict).rename_axis('dfIndex'))
+df_dict = {
+'ts' : hl.stats_df(data_dict.get('teamsummary')),
+'fs' : hl.stats_df(data_dict.get('franchisesummary')),
+'pp' : hl.stats_df(data_dict.get('powerplay')),
+'pk' : hl.stats_df(data_dict.get('penaltykill')),
+'pen' : hl.stats_df(data_dict.get('penalties')),
+'rt' : hl.stats_df(data_dict.get('realtime')),
+'fos' : hl.stats_df(data_dict.get('faceoffsbystrength')),
+'so' : hl.stats_df(data_dict.get('shootout')),
+'shoot' : hl.stats_df(data_dict.get('teamsummaryshooting')),
+'tp' : hl.stats_df(data_dict.get('teampercentages')),
+'score' : hl.stats_df(data_dict.get('teamscoring')),
+'foz' : hl.stats_df(data_dict.get('faceoffsbyzone')),
+'st' : hl.stats_df(data_dict.get('shottype'))}
+
+merge1 = hl.df_join(df_dict.get('ts'),df_dict.get('fs'))
+merge2 = hl.df_join(merge1,df_dict.get('pp'))
+merge3 = hl.df_join(merge2,df_dict.get('pk'))
+merge4 = hl.df_join(merge3,df_dict.get('pen'))
+merge5 = hl.df_join(merge4,df_dict.get('rt'))
+merge6 = hl.df_join(merge5,df_dict.get('fos'))
+merge7 = hl.df_join(merge6,df_dict.get('shoot'))
+merge8 = hl.df_join(merge7,df_dict.get('tp'))
+merge9 = hl.df_join(merge8,df_dict.get('score'))
+merge10 = hl.df_join(merge9,df_dict.get('foz'))
+merge11 = hl.df_join(merge10,df_dict.get('st'))
+NHL_csv = hl.create_csv(hl.df_join(merge11,df_dict.get('so')).rename_axis('dfIndex'))
 NHL_sch = hl.create_csv(hl.schedule_df(data_dict.get('schedule')).rename_axis('dfIndex'))
 
 
