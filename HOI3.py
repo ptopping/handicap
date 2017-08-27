@@ -2748,9 +2748,9 @@ defines = {
 'naval_combat' : 'naval_doctrine_practical',
 'air_combat' : 'air_doctrine_practical',
 'bombing' : 'air_doctrine_practical',
-'base_militia' : 'militia_brigade'
-}
-country = {
+'base_militia' : 'militia_brigade',
+
+'country' : {
 	'CORE_LOSE' 				: 50,
 	'CORE_GAIN' 				: 50,
 	'YEARS_OF_NATIONALISM' 	: 20,   # Years of Nationalism
@@ -2794,9 +2794,9 @@ country = {
 	'MILITARY_ESPIONAGE_DETECTION_CHANCE' : 0.6,
 	'MILITARY_ESPIONAGE_AT_BASE_CHANCE' : 2,
 	'SPY_MILITARY_INTEL_LOCAL_TIME_BASE' : 15
-}
+},
 
-economy = {
+'economy' : {
 	'MAX_PROVINCE_SELL_PRICE' 	: 2000,
 	'LEADERSHIP_TO_DIPLOMACY' 	: 0.5,	 # Leadership to Diplomatic Influence factor.
 	'IC_TO_MONEY' 			: 0.05,
@@ -2818,9 +2818,9 @@ economy = {
 	'CARGO_TONS_SUNK_SCALE'		: 1000.0,
 	'LL_CONVOY_EFF_IMPACT'		: 0.4,  # How much decreases efficiency when convoy is sunk. (f.ex. if impact is 25% and sunk only a half of total transports, then efficiency reduces by 12.5%)
 	'LL_CONVOY_EFF_REGAIN'		: 0.01 	 # How much efficiency % regenerates every day.
-}
+},
 
-military = {
+'military' : {
 	'MAX_MANPOWER' : 10,
 	'HISTORICAL_MODEL_MAX' : 10, 	# historical models max
 	'BASE_CHANCE_TO_AVOID_HIT' : 70.0,	# Base chance to avoid hit if defences left.
@@ -3000,9 +3000,9 @@ military = {
 	'CAG_SHIP_ATTACK_STR_BONUS' : 2.0, #- attack bonus if CAG attacks ships who are busy in combat
 	'CAG_SHIP_ATTACK_ORG_BONUS' : 2.0,
 	'NEW_LEADER_ORG_HIT' : 0.5
-}
+},
 
-diplomacy = {
+'diplomacy' : {
 	'WARDEC_BELIGERENCY' : 33.0, 
 	'WARDEC_WAR_DIPLOMACY_HIT' : 100.0,
 	'WARDEC_INFLUENCE_COST' : 0.0,
@@ -3070,9 +3070,9 @@ diplomacy = {
 	'LEND_LEASE_NEUTRALITY_LIMIT' : 60.0,
 	'LEND_LEASE_MAX_IC_LOW' : 0.05,	#-- bounds of % of our IC that we can share with LL. Interpolated by current neutrality vs LEND_LEASE_NEUTRALITY_LIMIT aspect.
 	'LEND_LEASE_MAX_IC_HIGH' : 0.90
-}
+},
 
-alignment = {
+'alignment' : {
 	'ALIGNMENT_INTERVAL' : 24,
 	'RELATION_WEIGHT' : 0.02,
 	'IDEOLOGY_WEIGHT' : 2.00,
@@ -3086,9 +3086,9 @@ alignment = {
 	'WAR_THREAT' : 35.0,
 	'LARGE_COUNTRY_IC' : 300.0, #-- used to scale threat impact with country IC
 	'REPULSION_IC_FACTOR' : 8	#-- If a country is of another ideology, the repulsion factor is modified by this value times its max IC, divided by the faction IC
-}
+},
 
-maps = {
+'maps' : {
 	'SUEZ' : 11381,
 	'SUEZ_BLOCKER' : 5612,
 	'PANAMA' : 11383,
@@ -3099,9 +3099,9 @@ maps = {
 	'BLACKSEA_BLOCKER' : 4503,
 	'GIBRALTAR' : 10559,
 	'GIBRALTAR_BLOCKER' : 5191
-}
+},
 
-weather = {
+'weather' : {
 	'PRESSUREMIN' 			: 870,	                           
 	'PRESSUREMAX' 			: 1090,                                   
 	'PRESSUREDEFAULT' 		: 1013,                                   
@@ -3159,9 +3159,9 @@ weather = {
 	'GFX_PARTIAL_CLOUD_LIMIT'				: 0.3,
 	'GFX_CLOUD_LIMIT'						: 0.8,
 	'INITIAL_SIMULATION_HOURS_AHEAD'		: 96  #-- (24*4) 4 days ahead - reducing it may improve loading time a bit, but worse weather precision at startup
-}
+},
 
-goods_cost = {
+'goods_cost' : {
 	'SUPPLIES' 		: 0.25,
 	'FUEL' 			: 0.75,
 	'MONEY' 			: 0.0,
@@ -3170,6 +3170,8 @@ goods_cost = {
 	'ENERGY' 			: 0.05,
 	'RARE_MATERIALS' 		: 0.2
 }
+}
+
 industry_tech =  {
 'combat_medicine' : {
 	'casualty_trickleback' : 0.01,
@@ -11423,6 +11425,10 @@ units = {
 }
 }
 
+import pandas as pd
+import numpy as np
+import math
+
 aircraft_tech_df = pd.DataFrame(aircraft_tech)
 aircraft_doctrine_df = pd.DataFrame(aircraft_doctrine)
 armor_tech_df = pd.DataFrame(armor_tech)
@@ -11431,9 +11437,9 @@ buildings_df = pd.DataFrame(buildings)
 combined_arms_df = pd.DataFrame(combined_arms)
 defines_df = pd.DataFrame(defines)
 country_df = defines_df[['country']]
-economy_df = pd.DataFrame[['economy']]
-military_df = pd.DataFrame[['military']]
-goods_cost_df = pd.DataFrame([goods_cost])
+economy_df = defines_df[['economy']]
+military_df = defines_df[['military']]
+goods_cost_df = defines_df[['goods_cost']]
 industry_tech_df = pd.DataFrame(industry_tech)
 infantry_tech_df = pd.DataFrame(infantry_tech)
 land_doctrine_df = pd.DataFrame(land_doctrine)
@@ -11448,284 +11454,112 @@ secret_tech_df = pd.DataFrame(secret_tech)
 categories_df = pd.DataFrame(categories)
 theories_df = pd.DataFrame(theories)
 units_df = pd.DataFrame(units)
+all_techs = [aircraft_tech_df.T,aircraft_doctrine_df.T,armor_tech_df.T,arty_tech_df.T,industry_tech_df.T,infantry_tech_df.T,land_doctrine_df.T,naval_doctrine_df.T,naval_tech_df.T,secret_tech_df.T,theories_df.T]
+all_techs_df = pd.concat(all_techs)
 
+tech_level = pd.DataFrame([test.get('technology')]).T
+tech_level.rename(columns={0 : 'Tech Level'}, inplace=True)
+techs = pd.merge(all_techs_df,tech_level, left_index=True, right_index=True, how='inner')
+techs = techs.apply(pd.to_numeric, errors='ignore')
+techs = techs.select_dtypes(include=[np.number]).multiply(techs['Tech Level'], axis = 0)
+techs['Tech Level'] = techs['Tech Level'].apply(lambda x : math.sqrt(x))
 
-def inputs():
-    y = {'base_ic' : raw_input('Base IC '),
-    'SUPPLIES': raw_input('Amount of Supplies '),
-    'FUEL': raw_input('Amount of Fuel '),
-    'MONEY' : raw_input('Amount of Money '),
-    'CRUDE_OIL': raw_input('Amount of Crude Oil '),
-    'METAL' : raw_input('Amount of Metal '),
-    'ENERGY' : raw_input('Amount of Energy '),
-    'RARE_MATERIALS': raw_input('Amount of Rare Materials '),
-    'FUEL__PRO': raw_input('Amount of Fuel Produced'),
-    'MONEY_PRO' : raw_input('Amount of Money Produced'),
-    'CRUDE_OIL_PRO': raw_input('Amount of Crude Oil Produced'),
-    'METAL_PRO' : raw_input('Amount of Metal Produced'),
-    'ENERGY_PRO' : raw_input('Amount of Energy Produced'),
-    'RARE_MATERIALS_PRO': raw_input('Amount of Rare Materials Produced'),
-    'head_of_state' : raw_input('head_of_state '),
-	'head_of_government' : raw_input('head_of_government '),
-	'foreign_minister' : raw_input('foreign_minister '),
-	'armament_minister' : raw_input('armament_minister '),
-	'minister_of_security' : raw_input('minister_of_security '),
-	'minister_of_intelligence' : raw_input('minister_of_intelligence '),
-	'chief_of_staff' : raw_input('chief_of_staff '),
-	'chief_of_army' : raw_input('chief_of_army '),
-	'chief_of_navy' : raw_input('chief_of_navy '),
-	'chief_of_air' : raw_input('chief_of_air '),
-	 
-	'infantry_theory' : raw_input('infantry_theory '),
-	'infantry_practical' : raw_input('infantry_practical '),
-	'militia_theory' : raw_input('militia_theory '),
-	'militia_practical' : raw_input('militia_practical '),
-	'mobile_theory' : raw_input('mobile_theory '),
-	'mobile_practical' : raw_input('mobile_practical '),
-	'artillery_theory' : raw_input('artillery_theory '),
-	'artillery_practical' : raw_input('artillery_practical '),
-	'rocket_science' : raw_input('rocket_science '),
-	'rocket_practical' : raw_input('rocket_practical '),
-	'naval_engineering' : raw_input('naval_engineering '),
-	'destroyer_practical' : raw_input('destroyer_practical '),
-	'cruiser_practical' : raw_input('cruiser_practical '),
-	'capitalship_practical' : raw_input('capitalship_practical '),
-	'carrier_practical' : raw_input('carrier_practical '),
-	'submarine_engineering' : raw_input('submarine_engineering'  ),
-	'submarine_practical' : raw_input('submarine_practical '),
-	'electornicegineering_theory' : raw_input('electornicegineering_theory'  ),
-	'electornicegineering_practical' : raw_input('electornicegineering_practical '),
-	'automotive_theory' : raw_input('automotive_theory'  ),
-	'armour_practical' : raw_input('armour_practical '),
-	'aeronautic_engineering' : raw_input('aeronautic_engineering'  ),
-	'single_engine_aircraft_practical' : raw_input('single_engine_aircraft_practical'  ),
-	'twin_engine_aircraft_practical' : raw_input('twin_engine_aircraft_practical '),
-	'four_engine_aircraft_practical' : raw_input('four_engine_aircraft_practical '),
-	'spearhead_theory' : raw_input('spearhead_theory'  ),
-	'superior_firepower_theory' : raw_input('superior_firepower_theory'  ),
-	'grand_battleplan_theory' : raw_input('grand_battleplan_theory'  ),
-	'human_wave_theory' : raw_input('human_wave_theory'  ),
-	'land_doctrine_practical': raw_input('land_doctrine_practical '),
-	'naval_doctrine_practical' : raw_input('naval_doctrine_practical'  ),
-	'base_strike_doctrine' : raw_input('base_strike_doctrine '),
-	'fleet_in_being_doctrine' : raw_input('fleet_in_being_doctrine'  ),
-	'air_doctrine_practical' : raw_input('air_doctrine_practical'  ),
-	'fighter_focus' : raw_input('fighter_focus '),
-	'cas_focus' : raw_input('cas_focus '),
-	'tac_focus' : raw_input('tac_focus '),
-	'nav_focus' : raw_input('nav_focus '),
-	'strategic_air_focus' : raw_input('strategic_air_focus'  ),
-	'sealane_interdiction_doctrine' : raw_input('sealane_interdiction_doctrine '),
-	'mechanicalengineering_theory' : raw_input('mechanicalengineering_theory '),
-	'chemical_engineering' : raw_input('chemical_engineering'  ),
-	'jetengine_theory' : raw_input('jetengine_theory'  ),
-	'jetengine_practical' : raw_input('jetengine_practical'  ),
-	'nuclear_physics' : raw_input('nuclear_physics '),
-	'nuclear_bomb' : raw_input('nuclear_bomb'  ),
-	'transport_practical' : raw_input('transport_practical '),
-	'officers_ratio' : raw_input('officers_ratio '),
-	'construction_practical' : raw_input('construction_practical '),
-	 
-	'combat_medicine' : raw_input('combat_medicine '),
-	'first_aid' : raw_input('first_aid '),
-	'agriculture' : raw_input('agriculture '),
-	'industral_production' : raw_input('industral_production '),
-	'industral_efficiency' : raw_input('industral_efficiency '),
-	'oil_to_coal_conversion' : raw_input('oil_to_coal_conversion '),
-	'supply_production' : raw_input('supply_production '),
-	'electronic_mechanical_egineering' : raw_input('electronic_mechanical_egineering '),
-	'radio_technology' : raw_input('radio_technology '),
-	'radio_detection_equipment' : raw_input('radio_detection_equipment '),
-	'radio' : raw_input('radio '),
-	'census_tabulation_machine' : raw_input('census_tabulation_machine '),
-	'mechnical_computing_machine' : raw_input('mechnical_computing_machine '),
-	'encryption_machine' : raw_input('encryption_machine '),
-	'construction_engineering' : raw_input('construction_engineering '),
-	'advanced_construction_engineering' : raw_input('advanced_construction_engineering '),
-	'rocket_tests' : raw_input('rocket_tests '),
-	'atomic_research' : raw_input('atomic_research '),
-	'oil_refinning' : raw_input('oil_refinning '),
-	'steel_production' : raw_input('steel_production '),
-	'raremetal_refinning_techniques' : raw_input('raremetal_refinning_techniques '),
-	'coal_processing_technologies' : raw_input('coal_processing_technologies '),
-	'education' : raw_input('education '),
-	'supply_transportation' : raw_input('supply_transportation '),
-	'supply_organisation' : raw_input('supply_organisation '),
-	'civil_defence' : raw_input('civil_defence '),
-	'heavy_aa_guns' : raw_input('heavy_aa_guns '),
-	'militia_smallarms' : raw_input('militia_smallarms '),
-	'militia_support' : raw_input('militia_support '),
-	'militia_guns' : raw_input('militia_guns '),
-	'militia_at' : raw_input('militia_at '),
-	'infantry_activation' : raw_input('infantry_activation '),
-	'smallarms_technology' : raw_input('smallarms_technology '),
-	'infantry_support' : raw_input('infantry_support '),
-	'infantry_guns' : raw_input('infantry_guns '),
-	'infantry_at' : raw_input('infantry_at '),
-	'schwerpunkt' : raw_input('schwerpunkt '),
-	'blitzkrieg' : raw_input('blitzkrieg '),
-	'mobile_warfare' : raw_input('mobile_warfare '),
-	'elastic_defence' : raw_input('elastic_defence '),
-	'operational_level_command_structure' : raw_input('operational_level_command_structure '),
-	'tactical_command_structure' : raw_input('tactical_command_structure '),
-	'mechanized_offensive' : raw_input('mechanized_offensive '),
-	'delay_doctrine' : raw_input('delay_doctrine '),
-	'integrated_support_doctrine' : raw_input('integrated_support_doctrine '),
-	'infantry_warfare' : raw_input('infantry_warfare '),
-	'special_forces' : raw_input('special_forces '),
-	'assault_concentration' : raw_input('assault_concentration '),
-	'central_planning' : raw_input('central_planning '),
-	'mass_assault' : raw_input('mass_assault '),
-	'peoples_army' : raw_input('peoples_army '),
-	'large_front' : raw_input('large_front '),
-	'guerilla_warfare' : raw_input('guerilla_warfare '),
-	'operational_level_organisation' : raw_input('operational_level_organisation '),
-	'cavalry_smallarms' : raw_input('cavalry_smallarms '),
-	'cavalry_support' : raw_input('cavalry_support '),
-	'cavalry_guns' : raw_input('cavalry_guns '),
-	'cavalry_at' : raw_input('cavalry_at '),
-	'mortorised_infantry' : raw_input('mortorised_infantry '),
-	'art_barrell_ammo' : raw_input('art_barrell_ammo '),
-	'art_carriage_sights' : raw_input('art_carriage_sights '),
-	'lighttank_brigade' : raw_input('lighttank_brigade '),
-	'lighttank_armour' : raw_input('lighttank_armour '),
-	'single_engine_aircraft_design' : raw_input('single_engine_aircraft_design '),
-	'basic_aeroengine' : raw_input('basic_aeroengine'  ),
-	'basic_small_fueltank' : raw_input('basic_small_fueltank'  ),
-	'basic_single_engine_airframe' : raw_input('basic_single_engine_airframe'  ),
-	'basic_aircraft_machinegun' : raw_input('basic_aircraft_machinegun '),
-	'twin_engine_aircraft_design' : raw_input('twin_engine_aircraft_design '),
-	'basic_aeroengine' : raw_input('basic_aeroengine '),
-	'basic_twin_engine_airframe' : raw_input('basic_twin_engine_airframe '),
-	'basic_four_engine_airframe' : raw_input('basic_four_engine_airframe '),
-	'battlecruiser_technology' : raw_input('battlecruiser_technology '),
-	'battlecruiser_antiaircraft' : raw_input('battlecruiser_antiaircraft '),
-	'battlecruiser_engine' : raw_input('battlecruiser_engine '),
-	'battlecruiser_armour' : raw_input('battlecruiser_armour '),
-	'battleship_technology' : raw_input('battleship_technology '),
-	'capitalship_armament' : raw_input('capitalship_armament '),
-	'battleship_antiaircraft' : raw_input('battleship_antiaircraft '),
-	'battleship_engine' : raw_input('battleship_engine '),
-	'battleship_armour' : raw_input('battleship_armour '),
-	'destroyer_technology' : raw_input('destroyer_technology '),
-	'destroyer_armament' : raw_input('destroyer_armament '),
-	'destroyer_engine' : raw_input('destroyer_engine '),
-	'destroyer_armour' : raw_input('destroyer_armour '),
-	'heavycruiser_technology' : raw_input('heavycruiser_technology '),
-	'heavycruiser_armament' : raw_input('heavycruiser_armament '),
-	'heavycruiser_antiaircraft' : raw_input('heavycruiser_antiaircraft '),
-	'heavycruiser_engine' : raw_input('heavycruiser_engine '),
-	'heavycruiser_armour' : raw_input('heavycruiser_armour '),
-	'lightcruiser_technology' : raw_input('lightcruiser_technology '),
-	'lightcruiser_armament' : raw_input('lightcruiser_armament '),
-	'lightcruiser_antiaircraft' : raw_input('lightcruiser_antiaircraft '),
-	'lightcruiser_engine' : raw_input('lightcruiser_engine '),
-	'lightcruiser_armour' : raw_input('lightcruiser_armour '),
-	'smallwarship_radar' : raw_input('smallwarship_radar '),
-	'submarine_technology' : raw_input('submarine_technology '),
-	'submarine_engine' : raw_input('submarine_engine '),
-	'submarine_sonar' : raw_input('submarine_sonar '),
-	'submarine_hull' : raw_input('submarine_hull '),
-	'sea_lane_defence' : raw_input('sea_lane_defence '),
-	'fire_control_system_training' : raw_input('fire_control_system_training '),
-	'fleet_auxiliary_submarine_doctrine' : raw_input('fleet_auxiliary_submarine_doctrine '),
-	'trade_interdiction_submarine_doctrine' : raw_input('trade_interdiction_submarine_doctrine '),
-	'cruiser_warfare' : raw_input('cruiser_warfare '),
-	'submarine_crew_training' : raw_input('submarine_crew_training '),
-	'fighter_pilot_training' : raw_input('fighter_pilot_training '),
-	'fighter_groundcrew_training' : raw_input('fighter_groundcrew_training '),
-	'interception_tactics' : raw_input('interception_tactics '),
-	'fighter_ground_control' : raw_input('fighter_ground_control '),
-	'bomber_targerting_focus' : raw_input('bomber_targerting_focus '),
-	'fighter_targerting_focus' : raw_input('fighter_targerting_focus '),
-	'cas_pilot_training' : raw_input('cas_pilot_training '),
-	'cas_groundcrew_training' : raw_input('cas_groundcrew_training '),
-	'ground_attack_tactics' : raw_input('ground_attack_tactics '),
-	'forward_air_control' : raw_input('forward_air_control '),
-	'battlefield_interdiction' : raw_input('battlefield_interdiction '),
-	'tac_pilot_training' : raw_input('tac_pilot_training '),
-	'tac_groundcrew_training' : raw_input('tac_groundcrew_training '),
-	'interdiction_tactics' : raw_input('interdiction_tactics '),
-	'logistical_strike_tactics' : raw_input('logistical_strike_tactics '),
-	'installation_strike_tactics' : raw_input('installation_strike_tactics '),
-	'airbase_strike_tactics' : raw_input('airbase_strike_tactics '),
-	'tactical_air_command' : raw_input('tactical_air_command '),
-	'nav_pilot_training' : raw_input('nav_pilot_training '),
-	'nav_groundcrew_training' : raw_input('nav_groundcrew_training '),
-	'portstrike_tactics' : raw_input('portstrike_tactics '),
-	'navalstrike_tactics' : raw_input('navalstrike_tactics '),
-	'naval_air_targeting' : raw_input('naval_air_targeting '),
-	'naval_tactics' : raw_input('naval_tactics '),
-	'heavy_bomber_pilot_training' : raw_input('heavy_bomber_pilot_training '),
-	'heavy_bomber_groundcrew_training' : raw_input('heavy_bomber_groundcrew_training'  ),
-	'strategic_bombardment_tactics' : raw_input('strategic_bombardment_tactics '),
-	'airborne_assault_tactics' : raw_input('airborne_assault_tactics '),
-	'strategic_air_command' : raw_input('strategic_air_command '),
-	'cas_development' : raw_input('cas_development '),
-	'nav_development' : raw_input('nav_development '),
-	'basic_strategic_bomber' : raw_input('basic_strategic_bomber '),
-
-	'training_laws' : raw_input('advanced_training '),
-	'press_laws' : raw_input('propaganda_press '),
-	'industrial_policy_laws' : raw_input('mixed_industry '),
-	'education_investment_law' : raw_input('medium_large_education_investment '),
-	'economic_law' : raw_input('basic_mobilisation '),
-	'conscription_law' : raw_input('volunteer_army '),
-	'civil_law' : raw_input('totalitarian_system '),
-    }
-    return y
-
-goods_cost_dft = goods_cost_df.T
-goods_cost_dft = goods_cost_dft.rename(columns={0 : 'Cost'})
-inputs = pd.DataFrame(test).T
-
-economic_effects = pd.merge(ministers_df.T, inputs, left_index=True, right_on=0, how='inner')
-laws_dict ={
-test.get('training_laws') : laws.get('training_laws').get(test.get('training_laws')),
-test.get('press_laws') : laws.get('press_laws').get(test.get('press_laws')),
-test.get('industrial_policy_laws') : laws.get('industrial_policy_laws').get(test.get('industrial_policy_laws')),
-test.get('education_investment_law') : laws.get('education_investment_law').get(test.get('education_investment_law')),
-test.get('economic_law') : laws.get('economic_law').get(test.get('economic_law')),
-test.get('conscription_law') : laws.get('conscription_law').get(test.get('conscription_law')),
-test.get('civil_law') : laws.get('civil_law').get(test.get('civil_law'))
+economic_effects = ministers_df.T
+ministers_dict = {
+'head_of_state':'power_hungry_demagogue',
+'head_of_government':'silent_workhorse',
+'foreign_minister':'great_compromiser',
+'armament_minister':'administrative_genius',
+'minister_of_security':'man_of_the_people',
+'minister_of_intelligence':'dismal_enigma',
+'chief_of_staff':'school_of_manoeuvre',
+'chief_of_army':'armoured_spearhead_doctrine',
+'chief_of_navy':'decisive_naval_battle_doctrine',
+'chief_of_air':'air_superiority_doctrine'}
+economic_effects = pd.merge(ministers_df.T,pd.DataFrame([ministers_dict]).T, left_index=True, right_on=0, how='inner')
+laws_dict = {
+'civil_law':'totalitarian_system',
+'conscription_law':'two_year_draft',
+'economic_law':'war_economy',
+'education_investment_law':'big_education_investment',
+'industrial_policy_laws':'consumer_product_orientation',
+'press_laws':'propaganda_press',
+'training_laws':'specialist_training',
 }
-laws_df = pd.DataFrame(laws_dict).T
-economic_effects = economic_effects.append(laws_df)
-base_values_df = static_modifiers_df[['base_values']]
-economic_effects = economic_effects.append(base_values_df.T)
+laws_dict2 = {y:laws.get(x).get(y) for x,y in laws_dict.iteritems()}
+laws_df2 = pd.DataFrame(laws_dict2)
+economic_effects = economic_effects.append(laws_df2.T)
+economic_effects = economic_effects.apply(pd.to_numeric, errors='ignore')
+economic_effects.drop(0, axis = 1, inplace=True)
+economic_effects = economic_effects.append(techs2)
+strategic_resources_df = pd.DataFrame(stratgic_resources)
+strat_res = {'aluminium' : raw_input('Aluminum '), 'antibiotics' : raw_input('Antibiotics '),
+'automotive_industry' : raw_input('Automotive Industry '), 'ballbearings' : raw_input('Ballbearings '),
+'black_soil' : raw_input('Black Soil '), 'cinchona' : raw_input('Cinchona '),
+'dockyard_facilities' : raw_input('Dockyard Facilities '), 'fur' : raw_input('Fur '),
+'gold' : raw_input('Gold '),'heavy_water' : raw_input('Heavy Water '), 'helium' : raw_input('Helium '),
+'horses' : raw_input('Horses '), 'oil_refinery' : raw_input('Oil Refinery '),
+'prefab_ship_facilities' : raw_input('Prefab Ship Facilities '), 'rubber' : raw_input('Rubber '), 
+'tungsten' : raw_input('Tungsten '), 'uranium' : raw_input('Uranium ')}
+strategic_resources_df.loc['Resources'] = pd.Series(strat_res)
+strategic_resources_df = strategic_resources_df.T
+strategic_resources_df = strategic_resources_df.apply(pd.to_numeric, errors='ignore')
+strategic_resources_df = strategic_resources_df.multiply(strategic_resources_df['Resources'], axis = 0)
+economic_effects = economic_effects.append(strategic_resources_df)
+economic_effects.dropna(axis=1, how='all', inplace=True)
+economic_effects.loc['global_modifer'] = 1
+economic_effects = economic_effects.sum()
 
-economic_effects.dropna(axis=1, how='all')
+base_ic = 144
+actual_ic = (economic_effects['global_ic'] + economic_effects['ic_modifier'] - 1) * base_ic
+trade_lp = pd.DataFrame(test)
+trade_lp = trade_lp[['home','pool']].dropna(axis = 0, how = 'all')
+trade_lp.rename(columns={'home' : 'Produced', 'pool' : 'Stockpile'}, inplace=True)
+gc_df2 = goods_cost_df.dropna(axis = 0, how = 'all')
+gc_df2.index = gc_df2.index.str.lower()
+trade_lp= trade_lp.T.append(gc_df2.T)
+trade_lp.loc['Used'] = pd.Series({'metal' : -1,'energy': -2,'rare_materials' : -.5 }) * actual_ic
+trade_lp.loc['Converted From'] = pd.Series({'crude_oil' : -.5, 'energy' : (-.05/(.1 + economic_effects['energy_to_oil_conversion'] - 1))}) * actual_ic
+trade_lp.loc['Converted To'] = pd.Series({'crude_oil' : .05, 'fuel' : (.5 * economic_effects['refinery_efficiency'])}) * actual_ic
+trade_lp.loc['Net Production'] = trade_lp.loc['Net Production'] = trade_lp.loc[['Produced','Used','Converted From','Converted To']].sum(axis=0)
 
-
-    actual_ic = y.get(int('base_ic'))
-	goods_cost_df = pd.DataFrame([goods_cost])
-	gods_cost_dft = goods_cost_df.T
-	x = goods_cost_dft.rename(columns={0 : 'Cost'})
-	x['Used'] = pd.Series({'METAL' : -1,'ENERGY': -2,'RARE_MATERIALS' : -.5 }) * actual_ic
-	x['Converted From'] = pd.Series({'CRUDE_OIL' : -.5, 'ENERGY' : -.05/.1}) * actual_ic
-	x['Converted To'] = pd.Series({'CRUDE_OIL' : .05, 'FUEL' : .5}) * actual_ic
-	z = x.pop('base_ic')
-	x['Stockpile'] = pd.Series(z)
-	x['Produced'] = pd.Series()
-	x['Traded'] = pd.Series()
-	x.set_value('MONEY','Cost',1)
-	return x.T
-
-
-
-
-base_ic = 100
-actual_ic = base_ic
-goods_cost_dft = goods_cost_df.T
-x = goods_cost_dft.rename(columns={0 : 'Cost'})
-x['Used'] = pd.Series({'METAL' : -1,'ENERGY': -2,'RARE_MATERIALS' : -.5 }) * actual_ic
-x['Converted From'] = pd.Series({'CRUDE_OIL' : -.5, 'ENERGY' : -.05/.1}) * actual_ic
-x['Converted To'] = pd.Series({'CRUDE_OIL' : .05, 'FUEL' : .5}) * actual_ic
-x['Stockpile'] = pd.Series(inputs())
-x['Produced'] = pd.Series()
 x['Traded'] = pd.Series()
 x.set_value('MONEY','Cost',1)
 x.T
+
+unit_list = [units.keys()]
+empty_df = []
+def unit_upgrades(unit):
+	x = {y:z.get(unit) for y,z in all_techs_df.iterrows()}
+	df = pd.DataFrame(x).T
+	df = df.dropna(axis = 0, how='all')
+	df = pd.merge(df,tech_level, left_index=True, right_index=True, how='inner')
+	df = df.apply(pd.to_numeric, errors='ignore')
+	df = df.select_dtypes(include=[np.number]).multiply(df['Tech Level'], axis = 0)
+	df['Tech Level'] = df['Tech Level'].apply(lambda x : math.sqrt(x))
+	return df
+#z = pd.Series(units.get('infantry_brigade'), name = 'Default')
+#xx = pd.DataFrame(z)
+#xx = xx.T
+#df = df.append(xx)
+#df = df.apply(pd.to_numeric, errors='ignore')
+#df.loc['infantry_brigade'] = df.sum(axis=0)
+#df	x = {y:z.get(units) for y,z in all_techs_df.iterrows()}
+
+#x = {y:z.get('infantry_brigade') for y,z in all_techs_df.iterrows()}
+#df = pd.DataFrame(x).T
+#df = df.dropna(axis = 0, how='all')
+#df = pd.merge(df,tech_level, left_index=True, right_index=True, how='inner')
+#df = df.apply(pd.to_numeric, errors='ignore')
+#df = df.select_dtypes(include=[np.number]).multiply(df['Tech Level'], axis = 0)
+#df['Tech Level'] = df['Tech Level'].apply(lambda x : math.sqrt(x))
+#z = pd.Series(units.get('infantry_brigade'), name = 'Default')
+#xx = pd.DataFrame(z)
+#xx = xx.T
+#df = df.append(xx)
+#df = df.apply(pd.to_numeric, errors='ignore')
+#df.loc['infantry_brigade'] = df.sum(axis=0)
+#df
 
 x = units_df.T
 x[[u'active', u'air_attack', u'air_defence', u'air_detection',
@@ -11747,4 +11581,3 @@ x[[u'active', u'air_attack', u'air_defence', u'air_detection',
        u'usable_by', u'visibility']]
 
 
-'global_crude_oil', 'global_ic', 'global_money', 'global_resources', 'global_supplies','industrial_efficiency', 'peace_consumer_goods_demand', 'supply_consumption', 'supply_throughput', 'war_consumer_goods_demand', 0
