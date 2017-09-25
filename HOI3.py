@@ -11580,4 +11580,38 @@ x[[u'active', u'air_attack', u'air_defence', u'air_detection',
        u'transport_capability', u'transport_weight', u'type', u'unit_group',
        u'usable_by', u'visibility']]
 
+def ter_atk_base(terrain):
+    some_var = {k : categories.get(terrain).get('attack') if units.get(k).get(terrain) is None
+    else categories.get(terrain).get('attack') if units.get(k).get(terrain).get('attack') is None 
+    else categories.get(terrain).get('attack') + units.get(k).get(terrain).get('attack') for k in units.iterkeys()}
+    return some_var
+
+def amp_atk_base(terrain):
+    some_var = {k : defines.get('military').get(terrain) if units.get(k).get('river') is None
+    else defines.get('military').get(terrain) if units.get(k).get('river').get('attack') is None 
+    else defines.get('military').get(terrain) + units.get(k).get('river').get('attack') for k in units.iterkeys()}
+    return some_var
+
+def ter_def_base(terrain):
+    some_var = {k : None if units.get(k).get(terrain) is None
+    else None if units.get(k).get(terrain).get('defence') is None 
+    else units.get(k).get(terrain).get('defence') for k in units.iterkeys()}
+    return some_var
+
+def amp_def_base(terrain):
+    some_var = {k : None if units.get(k).get(terrain) is None
+    else None if units.get(k).get(terrain).get('defence') is None 
+    else units.get(k).get(terrain).get('defence') for k in units.iterkeys()}
+    
+terrains = categories.keys()
+terrains.remove('ocean')
+amp_terrains = ['RIVER_CROSSING_PENALTY','AMPHIBIOUS_LANDING_PENALTY']
+terrain_atk_dict = {x : ter_atk_base(x) for x in terrains}
+amp_atk_dict = {x : amp_atk_base(x) for x in amp_terrains}
+terrains.append('river')
+terrains.append('amphibious')
+terrain_def_dict = {x : ter_def_base(x) for x in terrains}
+
+terrain_attack_df = pd.concat([pd.DataFrame(terrain_atk_dict),pd.DataFrame(amp_atk_dict)],axis=1)
+terrain_defense_df = pd.DataFrame(terrain_def_dict)
 
