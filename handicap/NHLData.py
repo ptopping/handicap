@@ -3,7 +3,7 @@ import pandas as pd
 import statscrape as ss
 
 #Addresses for NHL Historical Stats
-teamsummary = "http://www.nhl.com/stats/rest/team?isAggregate=false&reportType=basic&isGame=true&reportName=teamsummary&cayenneExp=gameDate%3E=%222011-09-01%22%20and%20gameDate%3C=%222017-10-01%22%20and%20gameTypeId>=2"
+teamsummary = "https://api.nhle.com/stats/rest/team?isAggregate=false&reportType=basic&isGame=true&reportName=teamsummary&sort=[{%22property%22:%22points%22,%22direction%22:%22DESC%22},{%22property%22:%22wins%22,%22direction%22:%22DESC%22}]&cayenneExp=leagueId=133%20and%20gameDate%3E=%222019-10-02%22%20and%20gameDate%3C=%222020-04-04%2023:59:59%22%20and%20gameTypeId=2"
 franchisesummary = "http://www.nhl.com/stats/rest/team?isAggregate=false&reportType=basic&isGame=true&reportName=franchisesummary&cayenneExp=gameDate%3E=%222011-09-01%22%20and%20gameDate%3C=%222017-10-01%22%20and%20gameTypeId>=2"
 powerplay = "http://www.nhl.com/stats/rest/team?isAggregate=false&reportType=basic&isGame=true&reportName=powerplay&cayenneExp=gameDate%3E=%222011-09-01%22%20and%20gameDate%3C=%222017-10-01%22%20and%20gameTypeId>=2"
 penaltykill = "http://www.nhl.com/stats/rest/team?isAggregate=false&reportType=basic&isGame=true&reportName=penaltykill&cayenneExp=gameDate%3E=%222011-09-01%22%20and%20gameDate%3C=%222017-10-01%22%20and%20gameTypeId>=2"
