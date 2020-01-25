@@ -1,22 +1,56 @@
-DROP TABLE nfl_game_instance_load PURGE;
-DROP TABLE nfl_game_load PURGE;
 DROP TABLE nfl_game_details_load PURGE;
-DROP TABLE nfl_game_drives_load PURGE;
 DROP TABLE nfl_game_scores_load PURGE;
+DROP TABLE nfl_game_drives_load PURGE;
+DROP TABLE nfl_game_load PURGE;
 DROP TABLE nfl_game_plays_load PURGE;
 DROP TABLE nfl_game_playstats_load PURGE;
 DROP TABLE nfl_game_player_load PURGE;
 DROP TABLE nfl_season_standings_load PURGE;
 DROP TABLE nfl_game_teamstats_load PURGE;
 
-
-CREATE TABLE nfl_game_instance_load
+CREATE TABLE nfl_game_details_load
 	(
-	env VARCHAR2(6), 
-	gameId VARCHAR2(37), 
-	isGameBookAvailable VARCHAR2(6), 
-	shieldConfig_apiPath VARCHAR2(20)
-    )
+	attendance INTEGER,
+	distance INTEGER,
+	down INTEGER,
+	gameClock VARCHAR2(6),
+	goalToGo VARCHAR2(6),
+	homePointsOvertimeTotal INTEGER,
+	homePointsQ1 INTEGER,
+	homePointsQ2 INTEGER,
+	homePointsQ3 INTEGER,
+	homePointsQ4 INTEGER,
+	homePointsTotal INTEGER,
+	homeTeam_abbreviation VARCHAR2(4),
+	homeTeam_nickName VARCHAR2(13),
+	homeTimeoutsRemaining INTEGER,
+	homeTimeoutsUsed INTEGER,
+	id VARCHAR2(37),
+	phase VARCHAR2(15),
+	playReview VARCHAR2(6),
+	possessionTeam_abbreviation VARCHAR2(4),
+	possessionTeam_nickName VARCHAR2(13),
+	redzone VARCHAR2(6),
+	stadium VARCHAR2(36),
+	startTime VARCHAR2(9),
+	visitorPointsOvertimeTotal INTEGER,
+	visitorPointsQ1 INTEGER,
+	visitorPointsQ2 INTEGER,
+	visitorPointsQ3 INTEGER,
+	visitorPointsQ4 INTEGER,
+	visitorPointsTotal INTEGER,
+	visitorTeam_abbreviation VARCHAR2(4),
+	visitorTeam_nickName VARCHAR2(13),
+	visitorTimeoutsRemaining INTEGER,
+	visitorTimeoutsUsed INTEGER,
+	weather_shortDescription VARCHAR2(81),
+	-- weather_shortDescription_Humidity INTEGER,
+	-- weather_shortDescription_Indoors VARCHAR2(6),
+	-- weather_shortDescription_Temp INTEGER,
+	-- weather_shortDescription_wind_direction VARCHAR2(10),
+	-- weather_shortDescription_wind_speed INTEGER,
+	yardsToGo INTEGER
+	)
 ORGANIZATION EXTERNAL
 	(
 	TYPE ORACLE_LOADER
@@ -28,7 +62,75 @@ ORGANIZATION EXTERNAL
 		OPTIONALLY ENCLOSED BY '"' AND '"'
 		MISSING FIELD VALUES ARE NULL
 		)
-	LOCATION ('nfl_game_instance.csv')
+	LOCATION ('nfl_game_details.csv')
+	)
+REJECT LIMIT UNLIMITED;
+
+CREATE TABLE nfl_game_scores_load
+	(
+	homeScore INTEGER,
+	id VARCHAR2(37),
+	patPlayId INTEGER,
+	playDescription VARCHAR2(96),
+	playId INTEGER,
+	visitorScore INTEGER
+	)
+ORGANIZATION EXTERNAL
+	(
+	TYPE ORACLE_LOADER
+	DEFAULT DIRECTORY ext_dat_load
+	ACCESS PARAMETERS
+		(
+		RECORDS DELIMITED BY '///x' skip=1
+		fields terminated by '|'
+		OPTIONALLY ENCLOSED BY '"' AND '"'
+		MISSING FIELD VALUES ARE NULL
+		)
+	LOCATION ('nfl_game_scores.csv')
+	)
+REJECT LIMIT UNLIMITED;
+
+CREATE TABLE nfl_game_drives_load
+	(
+	endTransition VARCHAR2(18),
+	endYardLine VARCHAR2(7),
+	endedWithScore VARCHAR2(6),
+	firstDowns INTEGER,
+	gameClockEnd VARCHAR2(6),
+	gameClockStart VARCHAR2(6),
+	howEndedDescription VARCHAR2(21),
+	howStartedDescription VARCHAR2(20),
+	id VARCHAR2(37),
+	inside20 VARCHAR2(6),
+	orderSequence INTEGER,
+	playCount INTEGER,
+	playIdEnded INTEGER,
+	playIdStarted INTEGER,
+	playSeqEnded INTEGER,
+	playSeqStarted INTEGER,
+	possessionTeam_abbreviation VARCHAR2(4),
+	possessionTeam_franchise_currentLogo_url VARCHAR2(100),
+	possessionTeam_nickName VARCHAR2(13),
+	quarterEnd INTEGER,
+	quarterStart INTEGER,
+	startTransition VARCHAR2(19),
+	startYardLine VARCHAR2(7),
+	timeOfPossession VARCHAR2(6),
+	yards INTEGER,
+	yardsPenalized INTEGER
+	)
+ORGANIZATION EXTERNAL
+	(
+	TYPE ORACLE_LOADER
+	DEFAULT DIRECTORY ext_dat_load
+	ACCESS PARAMETERS
+		(
+		RECORDS DELIMITED BY '///x' skip=1
+		fields terminated by '|'
+		OPTIONALLY ENCLOSED BY '"' AND '"'
+		MISSING FIELD VALUES ARE NULL
+		)
+	LOCATION ('nfl_game_drives.csv')
 	)
 REJECT LIMIT UNLIMITED;
 
@@ -78,126 +180,8 @@ ORGANIZATION EXTERNAL
 	)
 REJECT LIMIT UNLIMITED;
 
-CREATE TABLE nfl_game_details_load
-	(
-	attendance VARCHAR2(8),
-	distance INTEGER,
-	down INTEGER,
-	gameClock VARCHAR2(6),
-	goalToGo VARCHAR2(6),
-	homePointsOvertimeTotal INTEGER,
-	homePointsQ1 INTEGER,
-	homePointsQ2 INTEGER,
-	homePointsQ3 INTEGER,
-	homePointsQ4 INTEGER,
-	homePointsTotal INTEGER,
-	homeTeam_abbreviation VARCHAR2(4),
-	homeTeam_nickName VARCHAR2(13),
-	homeTimeoutsRemaining INTEGER,
-	homeTimeoutsUsed INTEGER,
-	id VARCHAR2(37),
-	phase VARCHAR2(15),
-	playReview VARCHAR2(6),
-	possessionTeam_abbreviation VARCHAR2(4),
-	possessionTeam_nickName VARCHAR2(13),
-	redzone VARCHAR2(6),
-	stadium VARCHAR2(36),
-	startTime VARCHAR2(9),
-	visitorPointsOvertimeTotal INTEGER,
-	visitorPointsQ1 INTEGER,
-	visitorPointsQ2 INTEGER,
-	visitorPointsQ3 INTEGER,
-	visitorPointsQ4 INTEGER,
-	visitorPointsTotal INTEGER,
-	visitorTeam_abbreviation VARCHAR2(4),
-	visitorTeam_nickName VARCHAR2(13),
-	visitorTimeoutsRemaining INTEGER,
-	visitorTimeoutsUsed INTEGER,
-	weather_shortDescription VARCHAR2(124),
-	yardsToGo INTEGER
-	)
-ORGANIZATION EXTERNAL
-	(
-	TYPE ORACLE_LOADER
-	DEFAULT DIRECTORY ext_dat_load
-	ACCESS PARAMETERS
-		(
-		RECORDS DELIMITED BY '///x' skip=1
-		fields terminated by '|'
-		OPTIONALLY ENCLOSED BY '"' AND '"'
-		MISSING FIELD VALUES ARE NULL
-		)
-	LOCATION ('nfl_game_details.csv')
-	)
-REJECT LIMIT UNLIMITED;
 
-CREATE TABLE nfl_game_drives_load
-	(
-	endTransition VARCHAR2(18),
-	endYardLine VARCHAR2(7),
-	endedWithScore VARCHAR2(6),
-	firstDowns INTEGER,
-	gameClockEnd VARCHAR2(6),
-	gameClockStart VARCHAR2(6),
-	gameId VARCHAR2(37),
-	howEndedDescription VARCHAR2(21),
-	howStartedDescription VARCHAR2(20),
-	inside20 VARCHAR2(6),
-	orderSequence INTEGER,
-	playCount INTEGER,
-	playIdEnded INTEGER,
-	playIdStarted INTEGER,
-	playSeqEnded INTEGER,
-	playSeqStarted INTEGER,
-	possessionTeam_abbreviation VARCHAR2(4),
-	possessionTeam_franchise_currentLogo_url VARCHAR2(100),
-	possessionTeam_nickName VARCHAR2(13),
-	quarterEnd INTEGER,
-	quarterStart INTEGER,
-	startTransition VARCHAR2(19),
-	startYardLine VARCHAR2(7),
-	timeOfPossession VARCHAR2(6),
-	yards INTEGER,
-	yardsPenalized INTEGER
-	)
-ORGANIZATION EXTERNAL
-	(
-	TYPE ORACLE_LOADER
-	DEFAULT DIRECTORY ext_dat_load
-	ACCESS PARAMETERS
-		(
-		RECORDS DELIMITED BY '///x' skip=1
-		fields terminated by '|'
-		OPTIONALLY ENCLOSED BY '"' AND '"'
-		MISSING FIELD VALUES ARE NULL
-		)
-	LOCATION ('nfl_game_drives.csv')
-	)
-REJECT LIMIT UNLIMITED;
 
-CREATE TABLE nfl_game_scores_load
-	(
-	gameId VARCHAR2(37),
-	homeScore INTEGER,
-	patPlayId INTEGER,
-	playDescription VARCHAR2(96),
-	playId INTEGER,
-	visitorScore INTEGER
-	)
-ORGANIZATION EXTERNAL
-	(
-	TYPE ORACLE_LOADER
-	DEFAULT DIRECTORY ext_dat_load
-	ACCESS PARAMETERS
-		(
-		RECORDS DELIMITED BY '///x' skip=1
-		fields terminated by '|'
-		OPTIONALLY ENCLOSED BY '"' AND '"'
-		MISSING FIELD VALUES ARE NULL
-		)
-	LOCATION ('nfl_game_scores.csv')
-	)
-REJECT LIMIT UNLIMITED;
 
 CREATE TABLE nfl_game_plays_load
 	(

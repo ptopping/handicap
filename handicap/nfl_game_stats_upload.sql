@@ -1,12 +1,66 @@
-MERGE INTO nfl_game_instance gi
-USING ( SELECT	env, gameId, isGameBookAvailable, shieldConfig_apiPath FROM nfl_game_instance_load) gil ON (
-	gi.gameId = gil.gameId
+MERGE INTO nfl_game_details gd
+USING ( SELECT 	attendance, distance, down, TO_TIMESTAMP(gameClock, 'MI:SS')gameClock, goalToGo, 
+	homePointsOvertimeTotal, homePointsQ1, homePointsQ2, homePointsQ3, homePointsQ4, homePointsTotal, homeTeam_abbreviation, 
+	homeTeam_nickName, homeTimeoutsRemaining, homeTimeoutsUsed, id, phase, playReview, possessionTeam_abbreviation, possessionTeam_nickName, redzone, 
+	stadium, TO_TIMESTAMP(startTime, 'HH24:MI:SS') startTime, visitorPointsOvertimeTotal, visitorPointsQ1, visitorPointsQ2, 
+	visitorPointsQ3, visitorPointsQ4, visitorPointsTotal, visitorTeam_abbreviation, visitorTeam_nickName, visitorTimeoutsRemaining, visitorTimeoutsUsed, 
+	weather_shortDescription, weather_shortDescription_Humidity, weather_shortDescription_Indoors, weather_shortDescription_Temp, 
+	weather_shortDescription_wind_direction, weather_shortDescription_wind_speed, yardsToGo FROM nfl_game_details_load) gdl ON (
+	gd.Id = gdl.Id
+)
+WHEN NOT MATCHED THEN
+	INSERT ( 
+		gd.attendance, gd.distance, gd.down, gd.gameClock, gd.goalToGo, gd.homePointsOvertimeTotal, gd.homePointsQ1, gd.homePointsQ2, gd.homePointsQ3, 
+		gd.homePointsQ4, gd.homePointsTotal, gd.homeTeam_abbreviation, gd.homeTeam_nickName, gd.homeTimeoutsRemaining, gd.homeTimeoutsUsed, gd.id, gd.phase, 
+		gd.playReview, gd.possessionTeam_abbreviation, gd.possessionTeam_nickName, gd.redzone, gd.stadium, gd.startTime, gd.visitorPointsOvertimeTotal, 
+		gd.visitorPointsQ1, gd.visitorPointsQ2, gd.visitorPointsQ3, gd.visitorPointsQ4, gd.visitorPointsTotal, gd.visitorTeam_abbreviation, 
+		gd.visitorTeam_nickName, gd.visitorTimeoutsRemaining, gd.visitorTimeoutsUsed, gd.weather_shortDescription, 
+		-- gd.weather_shortDescription_Humidity, 
+		-- gd.weather_shortDescription_Indoors, gd.weather_shortDescription_Temp, gd.weather_shortDescription_wind_direction, 
+		-- gd.weather_shortDescription_wind_speed, 
+		gd.yardsToGo
+	)	VALUES ( 
+		gdl.attendance, gdl.distance, gdl.down, gdl.gameClock, gdl.goalToGo, gdl.homePointsOvertimeTotal, gdl.homePointsQ1, gdl.homePointsQ2, 
+		gdl.homePointsQ3, gdl.homePointsQ4, gdl.homePointsTotal, gdl.homeTeam_abbreviation, gdl.homeTeam_nickName, gdl.homeTimeoutsRemaining, 
+		gdl.homeTimeoutsUsed, gdl.id, gdl.phase, gdl.playReview, gdl.possessionTeam_abbreviation, gdl.possessionTeam_nickName, gdl.redzone, 
+		gdl.stadium, gdl.startTime, gdl.visitorPointsOvertimeTotal, gdl.visitorPointsQ1, gdl.visitorPointsQ2, gdl.visitorPointsQ3, gdl.visitorPointsQ4, 
+		gdl.visitorPointsTotal, gdl.visitorTeam_abbreviation, gdl.visitorTeam_nickName, gdl.visitorTimeoutsRemaining, gdl.visitorTimeoutsUsed, 
+		gdl.weather_shortDescription, 
+		-- gdl.weather_shortDescription_Humidity, gdl.weather_shortDescription_Indoors, gdl.weather_shortDescription_Temp, 
+		-- gdl.weather_shortDescription_wind_direction, gdl.weather_shortDescription_wind_speed, 
+		gdl.yardsToGo
+	);
+
+MERGE INTO nfl_game_scores gs
+USING ( SELECT 	homeScore, id, patPlayId, playDescription, playId, visitorScore FROM nfl_game_scores_load) gsl ON (
+	gs.id = gsl.id AND gs.playId = gsl.playId
 )
 WHEN NOT MATCHED THEN
 	INSERT (
-		gi.env, gi.gameId, gi.isGameBookAvailable, gi.shieldConfig_apiPath        
+		gs.homeScore, gs.id, gs.patPlayId, gs.playDescription, gs.playId, gs.visitorScore
 	)	VALUES (
-		gil.env, gil.gameId, gil.isGameBookAvailable, gil.shieldConfig_apiPath        
+		gsl.homeScore, gsl.id, gsl.patPlayId, gsl.playDescription, gsl.playId, gsl.visitorScore
+	);
+
+MERGE INTO nfl_game_drives gd
+USING ( SELECT endTransition, endYardLine, endedWithScore, firstDowns, TO_TIMESTAMP(gameClockEnd, 'MI:SS') gameClockEnd, 
+	TO_TIMESTAMP(gameClockStart, 'MI:SS') gameClockStart, howEndedDescription, howStartedDescription, id, inside20, orderSequence, playCount, playIdEnded, 
+	playIdStarted, playSeqEnded, playSeqStarted, possessionTeam_abbreviation, possessionTeam_franchise_currentLogo_url ,possessionTeam_nickName, quarterEnd, quarterStart, 
+	startTransition, startYardLine, 
+	TO_DSINTERVAL('0 00:'||timeOfPossession) timeOfPossession, yards, yardsPenalized FROM nfl_game_drives_load) gdl ON (
+	gd.orderSequence = gdl.orderSequence AND gd.id = gdl.id
+)
+WHEN NOT MATCHED THEN
+	INSERT (
+		gd.endTransition, gd.endYardLine, gd.endedWithScore, gd.firstDowns, gd.gameClockEnd, gd.gameClockStart, gd.howEndedDescription, 
+		gd.howStartedDescription, gd.id, gd.inside20, gd.orderSequence, gd.playCount, gd.playIdEnded, gd.playIdStarted, gd.playSeqEnded, gd.playSeqStarted, 
+		gd.possessionTeam_abbreviation, gd.possessionTeam_franchise_currentLogo_url, gd.possessionTeam_nickName, gd.quarterEnd, gd.quarterStart, gd.startTransition, gd.startYardLine, 
+		gd.timeOfPossession, gd.yards, gd.yardsPenalized
+	)	VALUES (
+		gdl.endTransition, gdl.endYardLine, gdl.endedWithScore, gdl.firstDowns, gdl.gameClockEnd, gdl.gameClockStart, gdl.howEndedDescription, 
+		gdl.howStartedDescription, gdl.id, gdl.inside20, gdl.orderSequence, gdl.playCount, gdl.playIdEnded, gdl.playIdStarted, gdl.playSeqEnded, gdl.playSeqStarted, 
+		gdl.possessionTeam_abbreviation, gdl.possessionTeam_franchise_currentLogo_url, gdl.possessionTeam_nickName, gdl.quarterEnd, gdl.quarterStart, gdl.startTransition, 
+		gdl.startYardLine, gdl.timeOfPossession, gdl.yards, gdl.yardsPenalized
 	);
 
 MERGE INTO nfl_game g
@@ -32,62 +86,7 @@ WHEN NOT MATCHED THEN
 		gl.week_weekType, gl.week_weekValue
 	);
 
-MERGE INTO nfl_game_details gd
-USING ( SELECT 	REGEXP_REPLACE(attendance, '\D', '') attendance, distance, down, TO_TIMESTAMP(gameClock, 'MI:SS')gameClock, goalToGo, 
-	homePointsOvertimeTotal, homePointsQ1, homePointsQ2, homePointsQ3, homePointsQ4, homePointsTotal, homeTeam_abbreviation, 
-	homeTeam_nickName, homeTimeoutsRemaining, homeTimeoutsUsed, id, phase, playReview, possessionTeam_abbreviation, possessionTeam_nickName, redzone, 
-	stadium, TO_TIMESTAMP(startTime, 'HH24:MI:SS') startTime, visitorPointsOvertimeTotal, visitorPointsQ1, visitorPointsQ2, 
-	visitorPointsQ3, visitorPointsQ4, visitorPointsTotal, visitorTeam_abbreviation, visitorTeam_nickName, visitorTimeoutsRemaining, visitorTimeoutsUsed, 
-	weather_shortDescription, yardsToGo FROM nfl_game_details_load) gdl ON (
-	gd.Id = gdl.Id
-)
-WHEN NOT MATCHED THEN
-	INSERT ( 
-		gd.attendance, gd.distance, gd.down, gd.gameClock, gd.goalToGo, gd.homePointsOvertimeTotal, gd.homePointsQ1, gd.homePointsQ2, gd.homePointsQ3, 
-		gd.homePointsQ4, gd.homePointsTotal, gd.homeTeam_abbreviation, gd.homeTeam_nickName, gd.homeTimeoutsRemaining, gd.homeTimeoutsUsed, gd.id, gd.phase, 
-		gd.playReview, gd.possessionTeam_abbreviation, gd.possessionTeam_nickName, gd.redzone, gd.stadium, gd.startTime, gd.visitorPointsOvertimeTotal, 
-		gd.visitorPointsQ1, gd.visitorPointsQ2, gd.visitorPointsQ3, gd.visitorPointsQ4, gd.visitorPointsTotal, gd.visitorTeam_abbreviation, 
-		gd.visitorTeam_nickName, gd.visitorTimeoutsRemaining, gd.visitorTimeoutsUsed, gd.weather_shortDescription, gd.yardsToGo
-	)	VALUES ( 
-		gdl.attendance, gdl.distance, gdl.down, gdl.gameClock, gdl.goalToGo, gdl.homePointsOvertimeTotal, gdl.homePointsQ1, gdl.homePointsQ2, 
-		gdl.homePointsQ3, gdl.homePointsQ4, gdl.homePointsTotal, gdl.homeTeam_abbreviation, gdl.homeTeam_nickName, gdl.homeTimeoutsRemaining, 
-		gdl.homeTimeoutsUsed, gdl.id, gdl.phase, gdl.playReview, gdl.possessionTeam_abbreviation, gdl.possessionTeam_nickName, gdl.redzone, 
-		gdl.stadium, gdl.startTime, gdl.visitorPointsOvertimeTotal, gdl.visitorPointsQ1, gdl.visitorPointsQ2, gdl.visitorPointsQ3, gdl.visitorPointsQ4, 
-		gdl.visitorPointsTotal, gdl.visitorTeam_abbreviation, gdl.visitorTeam_nickName, gdl.visitorTimeoutsRemaining, gdl.visitorTimeoutsUsed, 
-		gdl.weather_shortDescription, gdl.yardsToGo
-	);
 
-MERGE INTO nfl_game_drives gd
-USING ( SELECT endTransition, endYardLine, endedWithScore, firstDowns, TO_TIMESTAMP(gameClockEnd, 'MI:SS') gameClockEnd, 
-	TO_TIMESTAMP(gameClockStart, 'MI:SS') gameClockStart, gameId, howEndedDescription, howStartedDescription, inside20, orderSequence, playCount, playIdEnded, 
-	playIdStarted, playSeqEnded, playSeqStarted, possessionTeam_abbreviation, possessionTeam_franchise_currentLogo_url ,possessionTeam_nickName, quarterEnd, quarterStart, 
-	startTransition, startYardLine, 
-	TO_DSINTERVAL('0 00:'||timeOfPossession) timeOfPossession, yards, yardsPenalized FROM nfl_game_drives_load) gdl ON (
-	gd.playIdStarted = gdl.playIdStarted AND gd.gameId = gdl.gameid
-)
-WHEN NOT MATCHED THEN
-	INSERT (
-		gd.endTransition, gd.endYardLine, gd.endedWithScore, gd.firstDowns, gd.gameClockEnd, gd.gameClockStart, gd.gameId, gd.howEndedDescription, 
-		gd.howStartedDescription, gd.inside20, gd.orderSequence, gd.playCount, gd.playIdEnded, gd.playIdStarted, gd.playSeqEnded, gd.playSeqStarted, 
-		gd.possessionTeam_abbreviation, gd.possessionTeam_franchise_currentLogo_url, gd.possessionTeam_nickName, gd.quarterEnd, gd.quarterStart, gd.startTransition, gd.startYardLine, 
-		gd.timeOfPossession, gd.yards, gd.yardsPenalized
-	)	VALUES (
-		gdl.endTransition, gdl.endYardLine, gdl.endedWithScore, gdl.firstDowns, gdl.gameClockEnd, gdl.gameClockStart, gdl.gameId, gdl.howEndedDescription, 
-		gdl.howStartedDescription, gdl.inside20, gdl.orderSequence, gdl.playCount, gdl.playIdEnded, gdl.playIdStarted, gdl.playSeqEnded, gdl.playSeqStarted, 
-		gdl.possessionTeam_abbreviation, gdl.possessionTeam_franchise_currentLogo_url, gdl.possessionTeam_nickName, gdl.quarterEnd, gdl.quarterStart, gdl.startTransition, 
-		gdl.startYardLine, gdl.timeOfPossession, gdl.yards, gdl.yardsPenalized
-	);
-
-MERGE INTO nfl_game_scores gs
-USING ( SELECT 	gameId, homeScore, patPlayId, playDescription, playId, visitorScore FROM nfl_game_scores_load) gsl ON (
-	gs.gameId = gsl.gameId AND gs.playId = gsl.playId
-)
-WHEN NOT MATCHED THEN
-	INSERT (
-		gs.gameId, gs.homeScore, gs.patPlayId, gs.playDescription, gs.playId, gs.visitorScore
-	)	VALUES (
-		gsl.gameId, gsl.homeScore, gsl.patPlayId, gsl.playDescription, gsl.playId, gsl.visitorScore
-	);
 
 MERGE INTO nfl_game_plays gp
 USING ( SELECT  TO_TIMESTAMP(clockTime, 'MI:SS') clockTime,down, driveNetYards, drivePlayCount, driveSequenceNumber, 
