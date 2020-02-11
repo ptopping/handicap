@@ -1,27 +1,32 @@
-#Import Python Libraries
-# from urllib2 import urlopen
-import pandas as pd
+# Standard Library imports
 import requests
 import re
 import json
-# import dateutil.parser
-# import datetime
+
+#Third Party Imports
+import pandas as pd
 from bs4 import BeautifulSoup
-# import requests
 
-#Parse Datetime string into python ISO 8601 datetime object
-zulu_con = lambda x: dateutil.parser.parse(x)
-
-#Load JSON object into Python
 class NHL_Stats(object):
+	"""
+	Data structure for ETL process of NHL Game stats and|or schedule
 
+	Parameters
+    
+    URL : str 
+        URL for NHL stat API
+
+    None
+	"""
 	def __init__(self,URL):
 		self.URL = URL
 
 	def statsDF(self):
 		'''
-		Input = NHL.com stats URL
-		Output = Pandas DataFrame with time conversion
+        Connects to NHL Rest API and pulls data.
+        
+        Returns : df
+            Pandas DataFrame
 		'''
 		r = requests.get(self.URL)
 		df = pd.DataFrame(json.loads(r.text)['data'])
@@ -29,8 +34,10 @@ class NHL_Stats(object):
 
 	def scheduleDF(self):
 		'''
-		Input = NHL.com schedule URL
-		Output = Pandas DataFrame of daily schedule
+		Connects to NHL Rest API and pulls daily schedule.
+        
+        Returns: converted
+            Pandas DataFrame of daily schedule
 		'''
 		response = urlopen(self.URL)
 		data = response.read().decode("utf-8")
@@ -64,21 +71,14 @@ class NFLStats(object):
 		Calendar year of the NFL season, only years 2001 and later are available
 	week : Int
 		Integer with a range of 1-17
-	data : List-like
+    data : List-like
+        Empty list filled by class methods
 	"""
 	def __init__(self,season_type,season,week):
 		self.season_type = season_type
 		self.season = season
 		self.week = week
 		self.data = []
-		# self.gamedetails = self.create_df(frame='gamedetails')
-		# self.scoringsummary = self.create_df(frame='scoringsummary')
-		# self.drives = self.create_df(frame='drives')
-		# self.plays = self.create_df(frame='plays')
-		# self.game = self.create_df(frame='game')
-		# self.gameplayer = self.create_df(frame='gameplayer')
-		# self.teamstats = self.create_df(frame='teamstats')
-		# self.standings = self.create_df(frame='standings')
 		if self.season_type == 'pre':
 			self.url = 'http://www.nfl.com/schedules/{}/PRE{}'.format(self.season,self.week)
 		if self.season_type == 'reg':
@@ -103,72 +103,138 @@ class NFLStats(object):
 
 			self.data.append(json.loads(m.group(0))['instance'])
 			
-	def create(self, frame):
+	def prettify(self, toplevel):
+        '''
+        Series of repeated functions create method reuses.  Each row will have unique id
+        
+        Parameters
+        
+        toplevel : str
+            Select the highest level to strip of nested lists and organize.  Can contain 'game', 'gameDetails'
+
+        Returns : df
+            Pandas dataframe
+            
+        Raises
+            ValueError: If toplevel not of specified value
+        '''
+        if toplevel in ('game', 'gameDetails'):
+            df = pd.io.json.json_normalize(data=[d.get(toplevel) for d in self.data], sep='_')
+            
+            # Find and remove columns which are lists or NULL.  Either types present issues for import into SQL
+            cols = [c for c in df.columns if not df[c].apply(isinstance, args=[list]).any()]
+			df = df[cols].dropna(how='all', axis=1)
+
+            # Oracle doesn't have a BOOL dtype so booleans must be converted
+            bools = df.select_dtypes(include='bool').columns
+            for b in bools:
+                df[b] = df[b].astype(int)            
+
+            # Oganize for troubleshooting purposes
+            df.columns = df.columns.str.upper()
+            df.sort_index(axis=1, inplace=True)
+            
+            return df        
+        
+        else:
+            Return ValueError
+
+        
+    def create(self, frame):
 		"""
 		Creates a dataframe from previously scraped data	
 
-		frame : 'Str'
+		Parameters
+        
+        frame : str
 			select which dataframe to return.  Choose from 'game', 'gameDetails', 'scoringSummaries', 'drives', 'plays', 'playStats', 'gamePlayerStats',
 			'teamStats',  standings
-		"""	
+		
+        Raises
+        
+            ValueError: If frame not one of specificed values
+        
+        """	
 
-		# GameDetails DataFrame
+        # Must run self.scrape first to populate self.data
 		if frame in ['gameDetails', 'scoringSummaries', 'drives', 'plays', 'playStats']:
-			df = pd.io.json.json_normalize(data=[d.get('gameDetails') for d in self.data], sep='_')
-			
-			if frame == 'gameDetails':
-				cols = [c for c in df.columns if not df[c].apply(isinstance, args=[list]).any()]
-				df = df[cols].dropna(how='all', axis=1)
-				df.columns = df.columns.str.upper()
-				bools = df.select_dtypes(include='bool').columns
-				for b in bools:
-					df[b] = df[b].astype(int)
-				df.sort_index(axis=1, inplace=True)	
+			df = self.prettify(toplevel='gameDetails')
 
 			if frame in ['scoringSummaries', 'drives']:
-				df2 = pd.DataFrame()
+                # scoringSummaries and drives are both lists within gameDetails.  Must iterate through gameDetails to extract
+                df2 = pd.DataFrame()
 				for i in range(len(df)):
 					df3 = pd.io.json.json_normalize(data=df[frame][i], sep='_')
+                    
+                    # Which game the drive belongs to                  
 					df3['id'] = df.loc[i,'id'] 
 					df2 = df2.append(df3, sort=False)
-				df = df2
+				
+                # For consistency rename to df                
+                df = df2
+                
+                # Find which columns are NULL.  NULL presents issues for import into SQL
 				df.dropna(how='all', axis=1, inplace=True)
-				df.columns = df.columns.str.upper()
-				bools = df.select_dtypes(include='bool').columns
+								
+                # Oracle doesn't have a BOOL dtype so booleans must be converted
+                bools = df.select_dtypes(include='bool').columns
 				for b in bools:
 					df[b] = df[b].astype(int)
-				df.sort_index(axis=1, inplace=True)
+				
+                # Oganize for troubleshooting purposes
+                df.columns = df.columns.str.upper()                
+                df.sort_index(axis=1, inplace=True)
 
 			if frame in ['plays', 'playStats']:
+                # plays is a list within gameDetails with playStats another nested list within plays                
 				df2 = pd.DataFrame()
 				for i in range(len(df)):
 					df3 = pd.io.json.json_normalize(data=df['plays'][i], sep='_')
+                    
+                    # Which game the play belongs to
 					df3['id'] = df.loc[i,'id'] 
 					df2 = df2.append(df3, sort=False)
-				df2.reset_index(drop=True, inplace=True)
-				cols = [c for c in df2.columns if not df2[c].apply(isinstance, args=[list]).any()]
+				
+                df2.reset_index(drop=True, inplace=True)
+				
+                # Find and remove NULL columns
+                cols = [c for c in df2.columns if not df2[c].apply(isinstance, args=[list]).any()]
 					
 				if frame == 'plays':
-					df = df2[cols]	
-
+                    # If frame is 'plays then no further work is needed				
+                    df = df2[cols]	
+                   
 				if frame == 'playStats':
 					df4 = pd.DataFrame()
-					for i in range(len(df2)):
+					
+                    for i in range(len(df2)):
 						try:
 							df5 = pd.io.json.json_normalize(data=df2['playStats'][i], sep='_')
-							df5['id'] = df2.loc[i,'id']
+							
+                            # # Which game and which play the playStat belongs to                            
+                            df5['id'] = df2.loc[i,'id']
 							df5['playId'] = df2.loc[i,'playId']
 							df4 = df4.append(df5, sort=False)
+                            
 						except AttributeError:
+#                           The opening play of each game is an empty value which will throw an AttributeError                             
 							df5 = pd.DataFrame({'id':{i:df2.loc[i,'id']}, 'playId':{i:df2.loc[i,'playId']}})
 							df4 = df4.append(df5, sort=False)
-					df = df4
+					
+                    # For consistency rename to df 
+                    df = df4
 			
 				df.reset_index(drop=True, inplace=True)
+                
+                # Find and remove NULL columns
 				df.dropna(how='all', axis=1, inplace=True)
+                
+                # Oracle doesn't have a BOOL dtype so booleans must be converted
 				bools = df.select_dtypes(include='bool').columns
 				for b in bools:
 					df[b] = df[b].astype(int)
+                    
+                # Oganize for troubleshooting purposes    
 				df.columns = df.columns.str.upper()
 				df.sort_index(axis=1, inplace=True)
 
@@ -178,6 +244,8 @@ class NFLStats(object):
 		elif frame == 'game':
 			df = pd.io.json.json_normalize(data=[d.get('game') for d in self.data], sep='_')
 			df.reset_index(drop=True,inplace=True)
+            
+            # Find and remove columns which are lists or NULL.  Either types present issues for import into SQL
 			cols = [c for c in df.columns if not df[c].apply(isinstance, args=[list]).any()]
 			df = df[cols]
 			bools = df.select_dtypes(include='bool').columns
