@@ -13,7 +13,7 @@ class NHL_Stats(object):
 
     Parameters
 
-    URL: str 
+    URL: str
         URL for NHL stat API
 
     None
@@ -54,9 +54,13 @@ class NHL_Stats(object):
         df_home = pd.DataFrame(list(df2['home']))
         df_away2 = pd.DataFrame(list(df_away['team']))
         df_home2 = pd.DataFrame(list(df_home['team']))
-        df_fin = pd.DataFrame({'gameDate': df1['gameDate'], 'visitor': df_away2['name'], 'home': df_home2['name']})
-        df_fin['gameDate'] = df_fin['gameDate'].apply(zulu_con).astype('datetime64[ns, MST]')
-        converted = pd.DataFrame.to_csv(df_fin.rename_axis('dfIndex'), encoding='utf-8')
+        df_fin = pd.DataFrame({'gameDate': df1['gameDate'], 
+                               'visitor': df_away2['name'], 
+                               'home': df_home2['name']})
+        df_fin['gameDate'] = df_fin['gameDate'].apply(zulu_con)\
+                                               .astype('datetime64[ns, MST]')
+        converted = pd.DataFrame.to_csv(df_fin.rename_axis('dfIndex'),
+                                        encoding='utf-8')
         return converted
 
 class NFLStats(object):
@@ -66,9 +70,12 @@ class NFLStats(object):
     Parameters
 
     season_type: Str
-        Must be one of three values: 'pre', 'reg', 'post' which is equivalent to Preseason, Regular Season and Post Season respectively
+        Must be one of three values: 'pre', 'reg', 'post' which is
+        equivalent to Preseason, Regular Season and Post Season
+        respectively
     season: Int
-        Calendar year of the NFL season, only years 2001 and later are available
+        Calendar year of the NFL season, only years 2001 and later are
+        available
     week: Int
         Integer with a range of 1-17
     data: List-like
@@ -80,15 +87,19 @@ class NFLStats(object):
         self.week = week
         self.data = []
         if self.season_type == 'pre':
-            self.url = 'http://www.nfl.com/schedules/{}/PRE{}'.format(self.season,self.week)
+            self.url = 'http://www.nfl.com/schedules/{}/PRE{}'\
+                       .format(self.season,self.week)
         if self.season_type == 'reg':
-            self.url = 'http://www.nfl.com/schedules/{}/REG{}'.format(self.season,self.week)
+            self.url = 'http://www.nfl.com/schedules/{}/REG{}'\
+                       .format(self.season,self.week)
         if self.season_type == 'post':
-            self.url = 'http://www.nfl.com/schedules/{}/POST'.format(self.season)
+            self.url = 'http://www.nfl.com/schedules/{}/POST'\
+                       .format(self.season)
 
     def scrape(self):
         """
-        Scrapes NFL.com schedule and Game Center data and returns it to parent class
+        Scrapes NFL.com schedule and Game Center data and returns it to
+        parent class
         """
 
         r = requests.get(self.url)
@@ -99,7 +110,9 @@ class NFLStats(object):
             url = g.get('href')
             r = requests.get(url)
             soup = BeautifulSoup(r.text, 'html.parser')
-            m = re.search('\{(.*?})*', soup.find('script',string=re.compile('INITIAL')).string)
+            m = re.search('\{(.*?})*',
+                          soup.find('script', string=re.compile('INITIAL'))
+                                                       .string)
 
             self.data.append(json.loads(m.group(0))['instance'])
 
@@ -118,8 +131,11 @@ class NFLStats(object):
         Raises:
             ValueError: If toplevel not of specified value
         '''
-        # Find and remove columns which are lists or NULL.  Either types present issues for import into SQL
-        cols = [c for c in df.columns if not df[c].apply(isinstance, args=[list]).any()]
+        # Find and remove columns which are lists or NULL.  Either
+        # types present issues for import into SQL
+        cols = [c for c in df.columns if not df[c].apply(isinstance,
+                                                         args=[list])
+                                                  .any()]
         df = df[cols].dropna(how='all', axis = 1)
 
         # Oracle doesn't have a BOOL dtype so booleans must be converted
@@ -140,150 +156,176 @@ class NFLStats(object):
         Parameters
 
         frame: str
-            select which dataframe to return.  Choose from 'game', 'gameDetails', 'scoringSummaries', 'drives', 'plays', 'playStats', 'gamePlayerStats',
-            'teamStats',  standings
+            select which dataframe to return.  Choose from 'game',
+            'gameDetails', 'scoringSummaries', 'drives', 'plays',
+            'playStats', 'gamePlayerStats', 'teamStats', standings
 
         Raises: ValueError 
             If frame not one of specificed values
 
-        """	
+        """
 
         # Must run self.scrape first to populate self.data
-        if frame in ['gameDetails', 'scoringSummaries', 'drives', 'plays', 'playStats']:
-            df = pd.io.json.json_normalize(data=[d.get('gameDetails') for d in self.data], sep='_')
+        details = ['gameDetails', 'scoringSummaries', 'drives', 'plays',
+                  'playStats']
+        if frame in details:
+            data = [d.get('gameDetails') for d in self.data]
+            df = pd.io.json.json_normalize(data=data, sep='_')
+
+            if frame == 'gameDetails':
+                return self.prettify(df)
 
             if frame in ['scoringSummaries', 'drives']:
-                # scoringSummaries and drives are both lists within gameDetails.  Must iterate through gameDetails to extract
+                # scoringSummaries and drives are both lists within
+                # gameDetails.  Must iterate through gameDetails to
+                # extract
                 df2 = pd.DataFrame()
                 for i in range(len(df)):
-                    df3 = pd.io.json.json_normalize(data=df[frame][i], sep='_')
+                    data=df[frame][i]
+                    df3 = pd.io.json.json_normalize(data=data, sep='_')
 
                     # Which game the drive belongs to
                     df3['id'] = df.loc[i, 'id'] 
                     df2 = df2.append(df3, sort=False)
 
-                # For consistency rename to df
-                df = df2
-            return self.prettify(df)
-			if frame in ['plays', 'playStats']:
-                # plays is a list within gameDetails with playStats another nested list within plays
-				df2 = pd.DataFrame()
-				for i in range(len(df)):
-                    df3 = pd.io.json.json_normalize(data=df['plays'][i], sep='_')
+                return self.prettify(df2)
+
+            if frame in ['plays', 'playStats']:
+                # plays is a list within gameDetails with playStats
+                # another nested list within plays
+                df2 = pd.DataFrame()
+                for i in range(len(df)):
+                    data=df['plays'][i]
+                    df3 = pd.io.json.json_normalize(data=data, sep='_')
 
                     # Which game the play belongs to
-					df3['id'] = df.loc[i, 'id'] 
-					df2 = df2.append(df3, sort=False)
+                    df3['id'] = df.loc[i, 'id'] 
+                    df2 = df2.append(df3, sort=False)
 
                 df2.reset_index(drop=True, inplace=True)
 
-
-
-				if frame == 'plays':
+                if frame == 'plays':
                     # If frame is 'plays then no further work is needed
-                    df = df2[cols]	
+                    return self.prettify(df2)
 
-				if frame == 'playStats':
-					df4 = pd.DataFrame()
+                if frame == 'playStats':
+                    df4 = pd.DataFrame()
 
                     for i in range(len(df2)):
-                        # The opening play of each game is an empty value which will throw an AttributeError
+                        # The opening play of each game is an empty
+                        # value which will throw an AttributeError
                         try:
-							df5 = pd.io.json.json_normalize(data=df2['playStats'][i], sep='_')
+                            data=df2['playStats'][i]
+                            df5 = pd.io.json.json_normalize(data=data,
+                                                            sep='_')
 
-                            # Which game and which play the playStat belongs to
+                            # Which game and which play the playStat
+                            # belongs to
                             df5['id'] = df2.loc[i, 'id']
-							df5['playId'] = df2.loc[i, 'playId']
-							df4 = df4.append(df5, sort=False)
+                            df5['playId'] = df2.loc[i, 'playId']
+                            df4 = df4.append(df5, sort=False)
 
-						except AttributeError:                           
-							df5 = pd.DataFrame({'id':{i:df2.loc[i,'id']}, 'playId':{i:df2.loc[i, 'playId']}})
-							df4 = df4.append(df5, sort=False)
+                        except AttributeError:
+                            dict_1 = {i:df2.loc[i,'id']}
+                            dict_2 = {i:df2.loc[i, 'playId']}
+                            df5 = pd.DataFrame({'id': dict_1,
+                                                'playId': dict_2})
+                            df4 = df4.append(df5, sort=False)
 
-                    # For consistency rename to df
-                    df = df4
+                    return self.prettify(df4)
 
-			return self.prettify(df)
-
-		# Game DataFrame
-		elif frame == 'game':
-			df = pd.io.json.json_normalize(data=[d.get('game') for d in self.data], sep='_')
-			df.reset_index(drop=True, inplace=True)
-
-			return self.prettify(df)
-
-		# Player Stats DataFrame
-		elif frame == 'gamePlayerStats':
-			df = pd.DataFrame()
-            # gamePlayerStats is a nested list.  Must iterate through it to extract stats
-            for d in range(len(self.data)):
-                df = df.append(pd.io.json.json_normalize(data=self.data[d].get('gamePlayerStats'), sep='_'), sort=False)
-			df.reset_index(drop=True, inplace=True)
+        # Game DataFrame
+        elif frame == 'game':
+            data=[d.get('game') for d in self.data]
+            df = pd.io.json.json_normalize(data=data, sep='_')
+            df.reset_index(drop=True, inplace=True)
 
             return self.prettify(df)
 
-		# Team Stats DataFrame
-		elif frame == 'teamStats':
-            # Team stats is a nested list with two components, homeTeamStats and awayTeamStats
-            df = pd.io.json.json_normalize(data=[d.get('teamStats') for d in self.data], sep='_')
+        # Player Stats DataFrame
+        elif frame == 'gamePlayerStats':
+            df = pd.DataFrame()
+            # gamePlayerStats is a nested list.  Must iterate through
+            # it to extract stats
+            for d in range(len(self.data)):
+                data=self.data[d].get('gamePlayerStats')
+                df = df.append(pd.io.json.json_normalize(data=data, sep='_'),
+                               sort=False)
+            df.reset_index(drop=True, inplace=True)
+
+            return self.prettify(df)
+
+        # Team Stats DataFrame
+        elif frame == 'teamStats':
+            # Team stats is a nested list with two components,
+            # homeTeamStats and awayTeamStats
+            data=[d.get('teamStats') for d in self.data]
+            df = pd.io.json.json_normalize(data=data, sep='_')
             # Find gameIds for join operations
-            ids = pd.Series([d.get('gameId') for d in self.data], name='gameId') 
+            ids = pd.Series([d.get('gameId') for d in self.data],
+                            name='gameId') 
             # Extract home sats and away stats
-            df2 = pd.io.json.json_normalize(df.homeTeamStats.apply(pd.Series)[0], sep='_')
-			df3 = pd.io.json.json_normalize(df.awayTeamStats.apply(pd.Series)[0], sep='_')
+            homestats = df.homeTeamStats.apply(pd.Series)[0]
+            awaystats = df.awayTeamStats.apply(pd.Series)[0]
+            df2 = pd.io.json.json_normalize(homestats, sep='_')
+            df3 = pd.io.json.json_normalize(awaystats, sep='_')
             # Join the home stats datafraem and away stats dataframe
-			df = df2.join(df3, lsuffix='_home', rsuffix='_away')
+            df = df2.join(df3, lsuffix='_home', rsuffix='_away')
             # Join the combined stats dataframe on gameId
             df = df.join(ids)
-			df.reset_index(drop=True, inplace=True)
+            df.reset_index(drop=True, inplace=True)
 
-			return self.prettify(df)	
+            return self.prettify(df)
 
-		# Standings DataFrame
-		elif frame == 'standings':
+        # Standings DataFrame
+        elif frame == 'standings':
             # Standings consist of several nested lists
-            df = pd.io.json.json_normalize(data=[d.get('standings') for d in self.data], sep='_')
-			df = pd.io.json.json_normalize(pd.DataFrame(df['edges'][0])['node'], sep='_') #Only first result is needed as others are duplicates
-			df2 = pd.DataFrame()
+            data=[d.get('standings') for d in self.data]
+            df = pd.io.json.json_normalize(data=data, sep='_')
+            data = pd.DataFrame(df['edges'][0])['node']
+            #Only first result is needed as others are duplicates
+            df = pd.io.json.json_normalize(data=data, sep='_')
+            df2 = pd.DataFrame()
             
             for i in range(len(df)):
-				df3 = pd.DataFrame(df.loc[i, 'teamRecords'])
-				df3['week_id'] = df.loc[i, 'week_id']
-				df2 = df2.append(df3, sort=False)
-			df = df[cols].merge(df2, how='left', left_on='week_id', right_on='week_id')
-			df.reset_index(drop=True, inplace=True) 
+                df3 = pd.DataFrame(df.loc[i, 'teamRecords'])
+                df3['week_id'] = df.loc[i, 'week_id']
+                df2 = df2.append(df3, sort=False)
+            df = df.merge(df2, how='left', left_on='week_id', 
+                                right_on='week_id')
+            df.reset_index(drop=True, inplace=True) 
 
-			return self.prettify(df)	
+            return self.prettify(df)
 
-		else:
-			return ValueError
+        else:
+            return ValueError
 
 def create_csv(frame, name):
-	'''
+    '''
     Converts DataFrame to csv
-	Input = Pandas DataFrame
-	Output = csv text
-	'''
-	converted = frame.to_csv(index=False,sep='|', encoding='utf-8', line_terminator='///x')
-	stat_table = open('d:\\depthandtaxes\\{}.csv'.format(name),'w')
-	stat_table.write(converted)
-	stat_table
-
+    Input = Pandas DataFrame
+    Output = csv text
+    '''
+    converted = frame.to_csv(index=False,sep='|', encoding='utf-8',
+                             line_terminator='///x')
+    stat_table = open('d:\\depthandtaxes\\{}.csv'.format(name),'w')
+    stat_table.write(converted)
+    stat_table
 
 #Merge two DataFrames to one
 def df_join(df1, df2):
-	'''
-	df1 = First DataFrame
-	df2 = Second DataFrame
-	Output = Merged DataFrame
-	'''
-	colsdf1 = df1.columns
-	colsdf2 = df2.columns
-	listcols1 = colsdf1.tolist()
-	listcols2 = colsdf2.tolist()
-	cols = []
-	for obj in listcols1:
-		if obj in listcols2:
-			cols.append(obj)
-	merged = pd.merge(df1, df2, on=cols, how='left')
-	return merged
+    '''
+    df1 = First DataFrame
+    df2 = Second DataFrame
+    Output = Merged DataFrame
+    '''
+    colsdf1 = df1.columns
+    colsdf2 = df2.columns
+    listcols1 = colsdf1.tolist()
+    listcols2 = colsdf2.tolist()
+    cols = []
+    for obj in listcols1:
+        if obj in listcols2:
+            cols.append(obj)
+    merged = pd.merge(df1, df2, on=cols, how='left')
+    return merged
